@@ -77,25 +77,25 @@ class vnStat {
 		// Create a placeholder array
 		$vnstatInterfaces = [];
 
+		$idKey = ($this->vnstatJsonVersion == 2) ? 'name' : 'id';
 		foreach($this->vnstatData['interfaces'] as $interface) {
-			array_push($vnstatInterfaces, $interface['id']);
+			array_push($vnstatInterfaces, $interface[$idKey]);
 		}
 
 		return $vnstatInterfaces;
 	}
 
 	public function getInterfaceData($timeperiod, $type, $interface) {
-		// If json version equals 1, add an 's' onto the end of each type.
-		// e.g. 'top' becomes 'tops'
-		if ($this->vnstatJsonVersion == 1) {
-			$typeAppend = 's';
-		}
+		// JSON v2 uses 'name' for interface key; v1 uses 'id'. v2 traffic keys have no 's' suffix.
+		$idKey = ($this->vnstatJsonVersion == 2) ? 'name' : 'id';
+		$typeAppend = ($this->vnstatJsonVersion == 1) ? 's' : '';
 
 		// Blank placeholder
+		$i = 0;
 		$trafficData = [];
 
 		// Get the array index for the chosen interface
-		$arrayIndex = array_search($interface, array_column($this->vnstatData['interfaces'], 'id'));
+		$arrayIndex = array_search($interface, array_column($this->vnstatData['interfaces'], $idKey));
  
 		if ($timeperiod == 'top10') {
 			if ($type == 'table') {
@@ -133,7 +133,7 @@ class vnStat {
 					}
 				}
 
-                                usort($trafficData, sortingFunction);
+                                usort($trafficData, 'sortingFunction');
 
 			} else if ($type == 'graph') {
 				foreach ($this->vnstatData['interfaces'][$arrayIndex]['traffic']['hour'.$typeAppend] as $traffic) {
